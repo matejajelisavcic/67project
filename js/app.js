@@ -77,16 +77,21 @@
     refreshSelection();
     dash.innerHTML = M.panels.dashboard(byName[name], data);
     positionEduLegend();
-    document.title = `${name} County — Pennsylvania county outlook`;
+    document.title = `${name} County — Pennsylvania County Outlook`;
     writeHash();
-    if (window.innerWidth <= 1100) dash.scrollIntoView({ block: "start" });
+    // Stacked layout: scroll the dashboard up to just below the sticky header,
+    // whose height changes as it wraps, so nothing lands underneath it.
+    if (window.innerWidth <= 1100) {
+      const head = document.querySelector(".top").offsetHeight;
+      window.scrollTo({ top: dash.getBoundingClientRect().top + window.scrollY - head - 10, behavior: "smooth" });
+    }
   }
   function clear() {
     state.county = null;
     Object.values(paths).forEach(p => p.classList.remove("sel"));
     refreshSelection();
     dash.innerHTML = M.panels.statewide(data);
-    document.title = "Pennsylvania county outlook — MCAP";
+    document.title = "Pennsylvania County Outlook — MCAP";
     writeHash();
   }
 

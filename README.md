@@ -16,6 +16,9 @@ Every later data update is: run the build tool, commit, push.
 
 - Tabs switch what the map is colored by: projected margin, red/blue/purple
   classification, swing (base → projected), density, elasticity, vulnerability.
+- Under the map, a single scale bar reads the metric end to end — More
+  Republican → More Democratic for the margin views, low → high for the
+  score views — in place of the old swatch legend.
 - Hover a county for its value; click it (or use the search box, or the
   "closest counties" list) to open its dashboard. Esc returns to the
   statewide view.
@@ -27,6 +30,21 @@ Every later data update is: run the build tool, commit, push.
   page on a specific county and view.
 - *Download map* saves the current map as PNG. *Print dashboard* prints the
   dashboard alone (choose "Save as PDF" in the print dialog for a file).
+
+## Brand font
+
+The page asks for **Proxinovo** (Mercyhurst style guide) and falls back to
+Barlow until it is present. Drop the licensed web fonts into `css/fonts/` as:
+
+```
+css/fonts/proxinovo-regular.woff2     400
+css/fonts/proxinovo-medium.woff2      500
+css/fonts/proxinovo-semibold.woff2    600
+css/fonts/proxinovo-bold.woff2        700
+```
+
+No other change is needed — every heading, number and map label picks them up.
+Until they are added the browser console logs a 404 for each missing file.
 
 ## Loading your data
 
@@ -52,7 +70,7 @@ of the aliases in `tools/build_data.py` work; the canonical names are:
 | logpwd | Population Density Score | 0–10 |
 | elasticity | Elasticity Score | 0–2 |
 | macrotide | National Mood Impact | −5 to 5 |
-| basemarg | Base Margin, points | +D / −R |
+| basemarg | Base Margin, points, labelled with `meta.base_year` | +D / −R |
 | projmarg | Projected Margin 2028, points | +D / −R |
 | vulcomposite | Economic Vulnerability composite | 0–100 |
 | anxiety_tier | Local Anxiety Risk Tier | Low, Moderate, Elevated, High |
@@ -83,7 +101,8 @@ you build from your own input.
 
 ```
 index.html          page
-css/style.css
+css/style.css      page styles, brand font, animations
+css/fonts/          Proxinovo web fonts (not in the repo, see above)
 js/colors.js        palette, margin ramp, formatting
 js/panels.js        dashboard panels (SVG) and statewide summary
 js/map.js           choropleth, legend, PNG export

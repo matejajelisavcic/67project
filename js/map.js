@@ -18,32 +18,36 @@
     const range = fn => { const v = rows.map(fn); return [Math.min(...v), Math.max(...v)]; };
     const swingLim = Math.ceil(Math.max(...rows.map(r => Math.abs(r.projmarg - r.basemarg))) * 10) / 10;
     const lim = absMax("projmarg");
-    const seq = (key, title, sub, unit, ramp) => {
+    const seq = (key, title, sub, unit, ramp, ends) => {
       const [lo, hi] = range(r => r[key]);
       return { key, title, sub, unit, value: r => r[key], color: v => ramp((v - lo) / (hi - lo || 1)),
-               legend: { kind: "seq", lo, hi, unit, ramp } };
+               legend: { kind: "seq", lo, hi, unit, ramp, ends } };
     };
+    const partyEnds = ["More Republican", "More Democratic"];
     return {
-      projmarg: { key: "projmarg", title: "Projected margin, 2028", sub: "PROJMARG, percentage points",
+      projmarg: { key: "projmarg", title: "Projected Margin, 2028", sub: "PROJMARG, percentage points",
         value: r => r.projmarg, color: v => M.binColor(M.marginBins(lim), v),
-        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt" }, tip: r => M.fmtMargin(r.projmarg) },
-      basemarg: { key: "basemarg", title: "Base margin", sub: "BASEMARG, before the national tide",
+        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt", ends: partyEnds }, tip: r => M.fmtMargin(r.projmarg) },
+      basemarg: { key: "basemarg", title: `Base Margin, ${data.meta.base_year}`, sub: "BASEMARG, percentage points",
         value: r => r.basemarg, color: v => M.binColor(M.marginBins(lim), v),
-        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt" }, tip: r => M.fmtMargin(r.basemarg) },
-      kind: { key: "kind", title: "Red, blue and purple counties", sub: `Purple = projected margin inside ${M.PURPLE_BAND} points`,
+        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt", ends: partyEnds }, tip: r => M.fmtMargin(r.basemarg) },
+      kind: { key: "kind", title: "Red, Blue and Purple Counties", sub: `Purple = projected margin inside ${M.PURPLE_BAND} points`,
         value: r => r.projmarg, color: v => M.kindColor(M.classify(v)),
         legend: { kind: "cat" }, tip: r => M.fmtMargin(r.projmarg) },
-      swing: { key: "swing", title: "Swing, base to projected", sub: "PROJMARG minus BASEMARG, points",
+      swing: { key: "swing", title: "Swing, Base to Projected", sub: "PROJMARG minus BASEMARG, points",
         value: r => r.projmarg - r.basemarg, color: v => M.binColor(M.marginBins(swingLim), v),
-        legend: { kind: "bins", bins: M.marginBins(swingLim), unit: " pt" },
+        legend: { kind: "bins", bins: M.marginBins(swingLim), unit: " pt", ends: ["Swung Republican", "Swung Democratic"] },
         tip: r => M.swingText(r.basemarg, r.projmarg) },
-      logpwd: seq("logpwd", "Population density score", "LOGPWD, 0–10", "", M.seqRamp("#EAF1F0", C.teal, "#12453F")),
-      elasticity: seq("elasticity", "Elasticity score", "ELASTICITY, 0–2", "", M.seqRamp("#EEF0FC", C.elastic, "#20307A")),
-      vulcomposite: seq("vulcomposite", "Economic vulnerability", "Composite score (CEVS), z-score vs state average", "", M.seqRamp("#F5EFE6", C.warn, "#7A3E0C")),
+      logpwd: seq("logpwd", "Population Density Score", "LOGPWD, 0–10", "", M.seqRamp("#EAF1F0", C.teal, "#12453F"),
+        ["Least dense", "Most dense"]),
+      elasticity: seq("elasticity", "Elasticity Score", "ELASTICITY, 0–2", "", M.seqRamp("#EEF0FC", C.elastic, "#20307A"),
+        ["Least elastic", "Most elastic"]),
+      vulcomposite: seq("vulcomposite", "Economic Vulnerability Score", "Composite score (CEVS), z-score vs state average", "",
+        M.seqRamp("#F5EFE6", C.warn, "#7A3E0C"), ["Least vulnerable", "Most vulnerable"]),
     };
   }
   // basemarg is available as a view (#view=basemarg) but not shown as a tab.
-  const TABS = [["projmarg", "Projected margin"], ["kind", "Red / blue / purple"], ["swing", "Swing"],
+  const TABS = [["projmarg", "Projected Margin"], ["kind", "Red / Blue / Purple"], ["swing", "Swing"],
                 ["logpwd", "Density"], ["elasticity", "Elasticity"], ["vulcomposite", "Vulnerability"]];
 
   function build(svg, data, onSelect) {
@@ -203,21 +207,37 @@
     return { paths, group: g, refreshSelection, zoom: { in: (x, y) => zoomBy(1.5, x, y), out: (x, y) => zoomBy(1 / 1.5, x, y), reset } };
   }
 
+  // The scale bar replaces the old chip legend: one horizontal bar per metric,
+  // captioned at both ends so the direction (Republican -> Democratic, low -> high)
+  // reads without decoding a swatch key.
+  function scaleEnd(head, sub, side) {
+    return `<span class="end ${side}"><b>${M.esc(head)}</b><em>${M.esc(sub)}</em></span>`;
+  }
+
   function legendHtml(spec, counts) {
-    const cnt = `<div class="counts"><span><i style="background:${C.dem}"></i>Blue ${counts.Blue}</span><span><i style="background:${C.pur}"></i>Purple ${counts.Purple}</span><span><i style="background:${C.rep}"></i>Red ${counts.Red}</span></div>`;
     const L = spec.legend;
-    if (L.kind === "cat") return cnt;
-    if (L.kind === "bins") {
-      const chips = L.bins.map((b, i) =>
-        `<span class="chip"><i style="background:${b.color}"></i>${M.binLabel(L.bins, i, L.unit)}</span>`).join("");
-      return `<div class="chips">${chips}</div>${cnt}`;
+    const cnt = `<div class="counts"><span><i style="background:${C.dem}"></i>Blue ${counts.Blue}</span><span><i style="background:${C.pur}"></i>Purple ${counts.Purple}</span><span><i style="background:${C.rep}"></i>Red ${counts.Red}</span></div>`;
+    let track, left, right, label;
+    if (L.kind === "cat") {
+      const segs = [[counts.Red, C.rep, "Red"], [counts.Purple, C.pur, "Purple"], [counts.Blue, C.dem, "Blue"]];
+      track = segs.map(([n, col, name]) => `<i style="flex:${n};background:${col}" title="${name}: ${n} counties"></i>`).join("");
+      left = scaleEnd("Republican", `${counts.Red} counties`, "left");
+      right = scaleEnd("Democratic", `${counts.Blue} counties`, "right");
+      label = `${counts.Red} red, ${counts.Purple} purple and ${counts.Blue} blue counties`;
+    } else if (L.kind === "bins") {
+      const outer = (+Math.abs(L.bins[0].max).toFixed(1)).toString();
+      track = L.bins.map((b, i) => `<i style="background:${b.color}" title="${M.esc(M.binLabel(L.bins, i, L.unit))}"></i>`).join("");
+      left = scaleEnd(L.ends[0], `${outer}${L.unit} or more`, "left");
+      right = scaleEnd(L.ends[1], `${outer}${L.unit} or more`, "right");
+      label = `${spec.title}, ${L.ends[0]} on the left to ${L.ends[1]} on the right`;
+    } else {
+      const stops = [0, .25, .5, .75, 1].map(t => `${L.ramp(t)} ${t * 100}%`).join(",");
+      track = `<i style="flex:1;background:linear-gradient(90deg,${stops})"></i>`;
+      left = scaleEnd((+L.lo).toFixed(1), L.ends[0], "left");
+      right = scaleEnd((+L.hi).toFixed(1), L.ends[1], "right");
+      label = `${spec.title} from ${(+L.lo).toFixed(1)} to ${(+L.hi).toFixed(1)}`;
     }
-    let stops;
-    if (L.kind === "div") stops = M.MARGIN_STOPS.map(([t, c]) => `<stop offset="${Math.round(t * 100)}%" stop-color="${c}"/>`).join("");
-    else stops = [0, .25, .5, .75, 1].map(t => `<stop offset="${t * 100}%" stop-color="${L.ramp(t)}"/>`).join("");
-    const id = "lg" + spec.key;
-    const lo = L.kind === "div" ? L.lo : (+L.lo).toFixed(1), hi = L.kind === "div" ? L.hi : (+L.hi).toFixed(1);
-    return `<span>${lo}</span><svg><defs><linearGradient id="${id}" x1="0" x2="1">${stops}</linearGradient></defs><rect width="240" height="12" rx="6" fill="url(#${id})"/></svg><span>${hi}</span>${cnt}`;
+    return `<div class="scale" role="img" aria-label="${M.esc(label)}">${left}<div class="track">${track}</div>${right}</div>${cnt}`;
   }
 
   function downloadPng(svg, filename) {
@@ -227,7 +247,7 @@
       p.setAttribute("stroke-width", p.classList.contains("sel") ? "2.6" : "0.9");
     });
     clone.querySelectorAll(".lbl").forEach(t => {
-      t.setAttribute("style", "font:600 13px Barlow,Arial,sans-serif;fill:#15181D;paint-order:stroke;stroke:#fff;stroke-width:3px;text-anchor:middle");
+      t.setAttribute("style", "font:600 13px Proxinovo,Barlow,Arial,sans-serif;fill:#15181D;paint-order:stroke;stroke:#fff;stroke-width:3px;text-anchor:middle");
     });
     const vb = svg.viewBox.baseVal;
     clone.setAttribute("width", vb.width * 2); clone.setAttribute("height", vb.height * 2);

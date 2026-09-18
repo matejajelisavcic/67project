@@ -308,7 +308,8 @@ def main():
 
     payload = {
         "meta": {"built": date.today().isoformat(), "demo": bool(is_demo),
-                 "view": [W, H], "edu_last_actual": edu_last_actual, "purple_band": 5.0},
+                 "view": [W, H], "edu_last_actual": edu_last_actual,
+                 "base_year": edu_last_actual, "purple_band": 5.0},
         "counties": counties,
         "metrics": metrics,
         "education": edu_out,
