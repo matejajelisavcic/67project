@@ -10,34 +10,78 @@
     Bucks: [8, 10], Berks: [0, -6], Dauphin: [-2, 8],
   };
 
-  // One entry per tab. `value` returns the number to color by; `color` maps it.
-  function metrics(data) {
-    const m = data.metrics;
+  // One entry per tab. `value(name)` returns the number to color that county
+  // by; `color` maps it. `year` is the point selected on the timeline: the
+  // projection year uses the model snapshot, an earlier year that cycle's
+  // actual result. A spec carrying `unavailable` has no data for that year and
+  // its tab is disabled, with the string as the reason.
+  function metrics(data, year) {
+    const m = data.metrics, proj = data.meta.proj_year;
+    const YS = M.yearsOf(data), isProj = year === proj;
+    const prev = YS[YS.indexOf(year) - 1];
     const rows = data.counties.map(c => m[c.name]);
-    const absMax = k => Math.ceil(Math.max(...rows.map(r => Math.abs(r[k]))) / 5) * 5;
     const range = fn => { const v = rows.map(fn); return [Math.min(...v), Math.max(...v)]; };
-    const swingLim = Math.ceil(Math.max(...rows.map(r => Math.abs(r.projmarg - r.basemarg))) * 10) / 10;
-    const lim = absMax("projmarg");
+    const at = (name, y) => M.marginAt(data, name, y);
+
+    // Scales span every year at once, so a shade means the same margin in 2012
+    // as it does in the projection year and the timeline is comparable.
+    const marg = [], swings = [];
+    data.counties.forEach(c => {
+      marg.push(m[c.name].projmarg, m[c.name].basemarg);
+      swings.push(m[c.name].projmarg - m[c.name].basemarg);
+      YS.forEach((y, i) => {
+        const v = at(c.name, y);
+        if (v == null) return;
+        marg.push(v);
+        const p = i > 0 ? at(c.name, YS[i - 1]) : null;
+        if (p != null) swings.push(v - p);
+      });
+    });
+    const bins = M.marginBins(Math.ceil(Math.max(...marg.map(Math.abs)) / 5) * 5);
+    const swingBins = M.marginBins(Math.ceil(Math.max(...swings.map(Math.abs)) * 10) / 10);
+    const partyEnds = ["More Republican", "More Democratic"];
+    const swingEnds = ["Swung Republican", "Swung Democratic"];
+    const frozen = `${proj} model score — no per-year source data, so the timeline does not change it`;
+
+    const marginSpec = (key, title, sub, get, tabLabel) => ({
+      key, title, sub, tabLabel, value: get, color: v => M.binColor(bins, v),
+      legend: { kind: "bins", bins, unit: " pt", ends: partyEnds }, tip: n => M.fmtMargin(get(n)),
+    });
+    const kindSpec = (title, sub, get) => ({
+      key: "kind", title, sub, value: get, color: v => M.kindColor(M.classify(v)),
+      legend: { kind: "cat" }, tip: n => M.fmtMargin(get(n)),
+    });
+    const swingSpec = (title, sub, get, tip) => ({
+      key: "swing", title, sub, value: get, color: v => M.binColor(swingBins, v),
+      legend: { kind: "bins", bins: swingBins, unit: " pt", ends: swingEnds }, tip,
+    });
     const seq = (key, title, sub, unit, ramp, ends) => {
       const [lo, hi] = range(r => r[key]);
-      return { key, title, sub, unit, value: r => r[key], color: v => ramp((v - lo) / (hi - lo || 1)),
+      return { key, title, sub, unit, value: n => m[n][key], color: v => ramp((v - lo) / (hi - lo || 1)),
                legend: { kind: "seq", lo, hi, unit, ramp, ends } };
     };
-    const partyEnds = ["More Republican", "More Democratic"];
+
+    if (!isProj) return {
+      projmarg: marginSpec("projmarg", `Result, ${year}`, `Actual margin, ${year} cycle, percentage points`, n => at(n, year), "Result"),
+      basemarg: { key: "basemarg", title: `Base Margin, ${data.meta.base_year}`, unavailable: frozen },
+      kind: kindSpec(`Red, Blue and Purple Counties, ${year}`,
+        `Purple = ${year} margin inside ${M.PURPLE_BAND} points`, n => at(n, year)),
+      swing: prev
+        ? swingSpec(`Swing, ${prev} to ${year}`, `${year} margin minus ${prev}, points`,
+            n => at(n, year) - at(n, prev), n => M.swingText(at(n, prev), at(n, year)))
+        : { key: "swing", title: "Swing", unavailable: `${year} is the first cycle on the timeline, so there is nothing to compare it with` },
+      logpwd: { key: "logpwd", title: "Population Density Score", unavailable: frozen },
+      elasticity: { key: "elasticity", title: "Elasticity Score", unavailable: frozen },
+      vulcomposite: { key: "vulcomposite", title: "Economic Vulnerability Score", unavailable: frozen },
+    };
+
     return {
-      projmarg: { key: "projmarg", title: "Projected Margin, 2028", sub: "PROJMARG, percentage points",
-        value: r => r.projmarg, color: v => M.binColor(M.marginBins(lim), v),
-        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt", ends: partyEnds }, tip: r => M.fmtMargin(r.projmarg) },
-      basemarg: { key: "basemarg", title: `Base Margin, ${data.meta.base_year}`, sub: "BASEMARG, percentage points",
-        value: r => r.basemarg, color: v => M.binColor(M.marginBins(lim), v),
-        legend: { kind: "bins", bins: M.marginBins(lim), unit: " pt", ends: partyEnds }, tip: r => M.fmtMargin(r.basemarg) },
-      kind: { key: "kind", title: "Red, Blue and Purple Counties", sub: `Purple = projected margin inside ${M.PURPLE_BAND} points`,
-        value: r => r.projmarg, color: v => M.kindColor(M.classify(v)),
-        legend: { kind: "cat" }, tip: r => M.fmtMargin(r.projmarg) },
-      swing: { key: "swing", title: "Swing, Base to Projected", sub: "PROJMARG minus BASEMARG, points",
-        value: r => r.projmarg - r.basemarg, color: v => M.binColor(M.marginBins(swingLim), v),
-        legend: { kind: "bins", bins: M.marginBins(swingLim), unit: " pt", ends: ["Swung Republican", "Swung Democratic"] },
-        tip: r => M.swingText(r.basemarg, r.projmarg) },
+      projmarg: marginSpec("projmarg", `Projected Margin, ${proj}`, "PROJMARG, percentage points", n => m[n].projmarg),
+      basemarg: marginSpec("basemarg", `Base Margin, ${data.meta.base_year}`, "BASEMARG, percentage points", n => m[n].basemarg),
+      kind: kindSpec("Red, Blue and Purple Counties",
+        `Purple = projected margin inside ${M.PURPLE_BAND} points`, n => m[n].projmarg),
+      swing: swingSpec("Swing, Base to Projected", "PROJMARG minus BASEMARG, points",
+        n => m[n].projmarg - m[n].basemarg, n => M.swingText(m[n].basemarg, m[n].projmarg)),
       logpwd: seq("logpwd", "Population Density Score", "LOGPWD, 0–10", "", M.seqRamp("#EAF1F0", C.teal, "#12453F"),
         ["Least dense", "Most dense"]),
       elasticity: seq("elasticity", "Elasticity Score", "ELASTICITY, 0–2", "", M.seqRamp("#EEF0FC", C.elastic, "#20307A"),
@@ -46,6 +90,7 @@
         M.seqRamp("#F5EFE6", C.warn, "#7A3E0C"), ["Least vulnerable", "Most vulnerable"]),
     };
   }
+
   // basemarg is available as a view (#view=basemarg) but not shown as a tab.
   const TABS = [["projmarg", "Projected Margin"], ["kind", "Red / Blue / Purple"], ["swing", "Swing"],
                 ["logpwd", "Density"], ["elasticity", "Elasticity"], ["vulcomposite", "Vulnerability"]];

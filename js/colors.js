@@ -97,6 +97,18 @@
     vulnColor: ramp([[0, "#2E7D74"], [0.5, "#C9A227"], [1, "#B0202F"]]),
     vulnColorFor(z) { return this.vulnColor(Math.min(1, Math.max(0, (z + 2.5) / 5))); },
     classify(v) { return Math.abs(v) < PURPLE_BAND ? "Purple" : v > 0 ? "Blue" : "Red"; },
+    // Points on the timeline: every completed cycle, then the projection year.
+    yearsOf(data) {
+      const first = data.counties[0].name;
+      return [...(data.historic[first] || []).map(r => r[0]), data.meta.proj_year];
+    },
+    // The margin for one county at one point on the timeline: the model's
+    // projection for the projection year, the actual result for a past cycle.
+    marginAt(data, name, year) {
+      if (year === data.meta.proj_year) return data.metrics[name].projmarg;
+      const row = (data.historic[name] || []).find(r => r[0] === year);
+      return row ? row[1] : null;
+    },
     kindColor(k) { return { Blue: C.dem, Red: C.rep, Purple: C.pur }[k]; },
     swingText(base, proj) {
       const d = proj - base;

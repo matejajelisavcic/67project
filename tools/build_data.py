@@ -229,7 +229,7 @@ def build_from_master_workbook(path, names, flip):
         his_out[name] = [[int(c), round(float(m) * 100 * sign, 1)]
                          for c, m in g[["Cycle", "Margin"]].values]
 
-    return metrics, edu_out, his_out, int(last_actual)
+    return metrics, edu_out, his_out, int(last_actual), int(last_cycle)
 
 
 # --------------------------------------------------------------- main
@@ -247,7 +247,7 @@ def main():
     is_demo = args.demo or os.path.abspath(args.input) == os.path.join(HERE, "demo_input")
 
     if is_master_workbook(args.input):
-        metrics, edu_out, his_out, edu_last_actual = build_from_master_workbook(
+        metrics, edu_out, his_out, edu_last_actual, proj_year = build_from_master_workbook(
             args.input, names, args.flip_sign)
     else:
         met = pick(read_table(args.input, "county_metrics"), METRIC_COLS, "county_metrics")
@@ -305,11 +305,12 @@ def main():
                        for y, m in g.sort_values("year")[["year", "margin"]].values if int(y) in HIST_YEARS]
                    for c, g in his.groupby("county")}
         edu_last_actual = 2024
+        proj_year = EDU_YEARS[-1]
 
     payload = {
         "meta": {"built": date.today().isoformat(), "demo": bool(is_demo),
                  "view": [W, H], "edu_last_actual": edu_last_actual,
-                 "base_year": edu_last_actual, "purple_band": 5.0},
+                 "base_year": edu_last_actual, "proj_year": proj_year, "purple_band": 5.0},
         "counties": counties,
         "metrics": metrics,
         "education": edu_out,

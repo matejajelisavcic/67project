@@ -14,6 +14,18 @@ Every later data update is: run the build tool, commit, push.
 
 ## Using the site
 
+- The timeline above the map steps through every completed cycle and then the
+  projection year. Picking a past year recolors the map with that cycle's
+  **actual result** and rebuilds the dashboard around it: the big numbers become
+  that year's margin and its change from the previous cycle, the education chart
+  marks that year, the historic-margin chart highlights it, and a county is
+  classified red/blue/purple on that year's result — so the panel set follows the
+  year too. The colour scale spans every year at once, so a shade means the same
+  margin in 2012 as it does in the projection year.
+- Only margins and education attainment exist per year. Density, elasticity,
+  national mood, vulnerability, enthusiasm and registration are single
+  projection-year model values: their tabs are disabled on a past year and the
+  dashboard says so, rather than implying the numbers are historical.
 - Tabs switch what the map is colored by: projected margin, red/blue/purple
   classification, swing (base → projected), density, elasticity, vulnerability.
 - Under the map, a single scale bar reads the metric end to end — More
@@ -26,8 +38,8 @@ Every later data update is: run the build tool, commit, push.
   counties show the top row and education; purple counties (projected margin
   inside 5 points) add enthusiasm, registration, vulnerability and historic
   margins.
-- The URL tracks the state (`#view=swing&county=Erie`), so a link opens the
-  page on a specific county and view.
+- The URL tracks the state (`#view=swing&year=2016&county=Erie`), so a link
+  opens the page on a specific county, view and year.
 - *Download map* saves the current map as PNG. *Print dashboard* prints the
   dashboard alone (choose "Save as PDF" in the print dialog for a file).
 
@@ -86,7 +98,8 @@ of the aliases in `tools/build_data.py` work; the canonical names are:
 | cnty_edu_pct | CNTYEDU%, county attainment |
 | st_edu_pct | STEDU%, state attainment |
 
-**historic_margins** — one row per county-cycle, 2012, 2014 … 2024
+**historic_margins** — one row per county-cycle, 2012, 2014 … 2024. These
+rows are what the timeline steps through, so every county needs every cycle.
 
 | column | meaning |
 | --- | --- |

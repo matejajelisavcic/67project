@@ -33,7 +33,7 @@ ${ticks}${zero}
   }
 
   // ---------------------------------------------------------- education
-  function education(series, county, lastActual, W = 420) {
+  function education(series, county, lastActual, W = 420, year) {
     const H = 220, L = 40, R = 38, T = 18, B = 28;
     const yrs = series.map(r => r[0]), c = series.map(r => r[1]), s = series.map(r => r[2]);
     const y0 = yrs[0], y1 = yrs[yrs.length - 1];
@@ -48,25 +48,31 @@ ${ticks}${zero}
     const xt = [y0, y0 + 4, y0 + 8, y0 + 12, y1].filter(y => y <= y1).map(y => `<text x="${X(y).toFixed(1)}" y="${H - 8}" class="tk" text-anchor="middle">${y}</text>`).join("");
     const band = y1 > lastActual
       ? `<rect x="${X(lastActual).toFixed(1)}" y="${T}" width="${(X(y1) - X(lastActual)).toFixed(1)}" height="${H - T - B}" fill="#EEF1F5"/><text x="${(X(lastActual) + 5).toFixed(1)}" y="${H - B - 6}" class="tk">projected</text>` : "";
-    const cl = c[c.length - 1], sl = s[s.length - 1];
+    const i = Math.max(0, yrs.indexOf(year == null ? y1 : year));
+    const px = X(yrs[i]), cl = c[i], sl = s[i];
     const close = Math.abs(Y(cl) - Y(sl)) < 11;
     const clY = close && cl >= sl ? Y(cl) - 5 : Y(cl);
     const slY = close && sl > cl ? Y(sl) + 5 : Y(sl);
+    // Labels flip to the left of the marker near the right edge so they stay inside the frame.
+    const nearEnd = px > W - R - 46;
+    const lx = nearEnd ? px - 7 : px + 7, anchor = nearEnd ? "end" : "start";
+    const mark = yrs[i] === y1 ? "" :
+      `<line x1="${px.toFixed(1)}" x2="${px.toFixed(1)}" y1="${T}" y2="${H - B}" stroke="${C.muted}" stroke-dasharray="3 3" opacity=".5"/>`;
     return `<div class="panel"><h3>Education Attainment</h3><p>Bachelor's degree or higher, county vs state, ${y0}–${y1}</p>
-<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Education line chart">${band}${grid}${xt}
+<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Education line chart">${band}${grid}${xt}${mark}
 <polyline points="${poly(s, act)}" fill="none" stroke="${C.muted}" stroke-width="2"/>
 <polyline points="${poly(s, prj)}" fill="none" stroke="${C.muted}" stroke-width="2" stroke-dasharray="5 4"/>
 <polyline points="${poly(c, act)}" fill="none" stroke="${C.teal}" stroke-width="2.6"/>
 <polyline points="${poly(c, prj)}" fill="none" stroke="${C.teal}" stroke-width="2.6" stroke-dasharray="5 4"/>
-<circle cx="${X(y1).toFixed(1)}" cy="${Y(cl).toFixed(1)}" r="3.5" fill="${C.teal}"/><text x="${(X(y1) + 7).toFixed(1)}" y="${(clY + 4).toFixed(1)}" class="tv2" fill="${C.teal}">${Math.round(cl)}%</text>
-<circle cx="${X(y1).toFixed(1)}" cy="${Y(sl).toFixed(1)}" r="3.5" fill="${C.muted}"/><text x="${(X(y1) + 7).toFixed(1)}" y="${(slY + 4).toFixed(1)}" class="tk">${Math.round(sl)}%</text>
+<circle cx="${px.toFixed(1)}" cy="${Y(cl).toFixed(1)}" r="3.5" fill="${C.teal}"/><text x="${lx.toFixed(1)}" y="${(clY + 4).toFixed(1)}" class="tv2" text-anchor="${anchor}" fill="${C.teal}">${Math.round(cl)}%</text>
+<circle cx="${px.toFixed(1)}" cy="${Y(sl).toFixed(1)}" r="3.5" fill="${C.muted}"/><text x="${lx.toFixed(1)}" y="${(slY + 4).toFixed(1)}" class="tk" text-anchor="${anchor}">${Math.round(sl)}%</text>
 <line x1="${L}" x2="${L + 18}" y1="${T + 4}" y2="${T + 4}" stroke="${C.teal}" stroke-width="2.6"/><text id="lbl1" x="${L + 24}" y="${T + 8}" class="tk">${M.esc(county)} County</text>
 <line id="lbl2line" x1="0" x2="0" y1="${T + 4}" y2="${T + 4}" stroke="${C.muted}" stroke-width="2"/><text id="lbl2" x="0" y="${T + 8}" class="tk">State average</text>
 </svg></div>`;
   }
 
   // ---------------------------------------------------------- historic margins
-  function historic(series) {
+  function historic(series, year) {
     const W = 420, H = 220, L = 40, R = 18, T = 22, B = 28;
     const yrs = series.map(r => r[0]), m = series.map(r => r[1]);
     const y0 = yrs[0], y1 = yrs[yrs.length - 1];
@@ -79,8 +85,8 @@ ${ticks}${zero}
     for (let g = -lim; g <= lim; g += 5)
       grid += `<line x1="${L}" x2="${W - R}" y1="${Y(g).toFixed(1)}" y2="${Y(g).toFixed(1)}" stroke="${C.rule}"/><text x="${L - 6}" y="${(Y(g) + 3.5).toFixed(1)}" class="tk" text-anchor="end">${g === 0 ? "Even" : Math.abs(g) + (g > 0 ? "D" : "R")}</text>`;
     const dots = yrs.map((y, i) => {
-      const v = m[i], col = v >= 0 ? C.dem : C.rep;
-      return `<circle cx="${X(y).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4" fill="${col}" stroke="#fff" stroke-width="1.5"/>` +
+      const v = m[i], col = v >= 0 ? C.dem : C.rep, sel = y === year;
+      return `<circle cx="${X(y).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${sel ? 6.5 : 4}" fill="${col}" stroke="#fff" stroke-width="${sel ? 2.5 : 1.5}"${sel ? "" : ' opacity=".8"'}/>` +
         `<text x="${X(y).toFixed(1)}" y="${(Y(v) + (v >= 0 ? -9 : 15)).toFixed(1)}" class="tv2" text-anchor="middle" fill="${col}">${Math.abs(Math.round(v))}${v >= 0 ? "D" : "R"}</text>`;
     }).join("");
     const xt = yrs.map(y => `<text x="${X(y).toFixed(1)}" y="${H - 8}" class="tk" text-anchor="middle">${y}</text>`).join("");
@@ -156,45 +162,68 @@ ${ticks}${zero}
   }
 
   // ---------------------------------------------------------- header + composition
-  function header(c, r, kind) {
+  function header(c, kind, yearChip) {
     return `<div class="dhead-block">
 <button class="btn back" type="button" data-act="clear" aria-label="Back to statewide view">&larr; All counties</button>
 <div class="dhead" style="--kind:${M.kindColor(kind)}">
 <h2 class="cond">${M.esc(c.name)} County</h2>
+${yearChip ? `<div class="yearchip">${M.esc(yearChip)}</div>` : ""}
 <div class="kind">${kind} county</div>
 <button class="btn" type="button" data-act="print">Print dashboard</button>
 </div></div>`;
   }
 
-  function topRow(r, data) {
-    return `<div class="row metrics">
-${thermometer(r.logpwd, 0, 10, "Population Density Score", C.teal)}
+  function topRow(data, name, year) {
+    const r = data.metrics[name], proj = data.meta.proj_year;
+    const YS = M.yearsOf(data), prev = YS[YS.indexOf(year) - 1];
+    const therms = `${thermometer(r.logpwd, 0, 10, "Population Density Score", C.teal)}
 ${thermometer(r.elasticity, 0, 2, "Elasticity Score", C.elastic, 2)}
-${thermometer(r.macrotide, -5, 5, "National Mood Score", r.macrotide >= 0 ? C.dem : C.rep)}
+${thermometer(r.macrotide, -5, 5, "National Mood Score", r.macrotide >= 0 ? C.dem : C.rep)}`;
+    if (year === proj)
+      return `<div class="row metrics">${therms}
 ${readout(`Base Margin, ${data.meta.base_year}`, r.basemarg, "")}
-${readout("Projected Margin, 2028", r.projmarg, M.swingText(r.basemarg, r.projmarg))}
+${readout(`Projected Margin, ${proj}`, r.projmarg, M.swingText(r.basemarg, r.projmarg))}
+</div>`;
+    const v = M.marginAt(data, name, year), pv = prev == null ? null : M.marginAt(data, name, prev);
+    const second = pv == null
+      ? readout(`Projected Margin, ${proj}`, r.projmarg, "model projection")
+      : readout(`Change from ${prev}`, v - pv, `${prev} was ${M.fmtMargin(pv)}`);
+    return `<div class="row metrics">${therms}
+${readout(`Result, ${year}`, v, "")}
+${second}
 </div>`;
   }
 
-  function dashboard(c, data) {
-    const r = data.metrics[c.name], kind = M.classify(r.projmarg);
+  function dashboard(c, data, year) {
+    const r = data.metrics[c.name], proj = data.meta.proj_year;
+    year = year == null ? proj : year;
+    const isProj = year === proj;
+    const marg = M.marginAt(data, c.name, year), kind = M.classify(marg);
     const edu = data.education[c.name] || [], his = data.historic[c.name] || [];
-    let html = header(c, r, kind) + topRow(r, data);
+    const basis = isProj ? `projected margin` : `${year} margin`;
+    let html = header(c, kind, isProj ? "" : `${year} result`);
+    // Says plainly which panels are a fixed model snapshot, so a past year on
+    // the timeline is never mistaken for per-year source data.
+    if (!isProj)
+      html += `<div class="yearnote">Showing the <b>${year}</b> result. Density, elasticity, national mood, vulnerability, enthusiasm and registration are ${proj} model values and do not change with the timeline.</div>`;
+    html += topRow(data, c.name, year);
     if (kind === "Purple") {
-      html += `<div class="row two">${education(edu, c.name, data.meta.edu_last_actual)}${historic(his)}</div>`;
+      html += `<div class="row two">${education(edu, c.name, data.meta.edu_last_actual, 420, year)}${historic(his, year)}</div>`;
       html += `<div class="row two">${enthusiasm(r)}${registration(r)}</div>`;
       html += vulnerability(r);
-      html += `<div class="note">Purple county: projected margin inside ${M.PURPLE_BAND} points, so all panels are shown. Margins are percentage points, positive = Democratic.</div>`;
+      html += `<div class="note">Purple county: ${basis} inside ${M.PURPLE_BAND} points, so all panels are shown. Margins are percentage points, positive = Democratic.</div>`;
     } else {
-      html += `<div class="row">${education(edu, c.name, data.meta.edu_last_actual, 860)}</div>`;
-      html += `<div class="note">${kind} county: projected margin beyond ${M.PURPLE_BAND} points. Margins are percentage points, positive = Democratic.</div>`;
+      html += `<div class="row">${education(edu, c.name, data.meta.edu_last_actual, 860, year)}</div>`;
+      html += `<div class="note">${kind} county: ${basis} beyond ${M.PURPLE_BAND} points. Margins are percentage points, positive = Democratic.</div>`;
     }
     return html;
   }
 
   // Statewide summary shown before a county is selected.
-  function statewide(data) {
-    const rows = data.counties.map(c => ({ name: c.name, m: data.metrics[c.name].projmarg }));
+  function statewide(data, year) {
+    const proj = data.meta.proj_year;
+    year = year == null ? proj : year;
+    const rows = data.counties.map(c => ({ name: c.name, m: M.marginAt(data, c.name, year) }));
     const n = { Blue: 0, Purple: 0, Red: 0 };
     rows.forEach(r => n[M.classify(r.m)]++);
     const closest = rows.slice().sort((a, b) => Math.abs(a.m) - Math.abs(b.m)).slice(0, 12);
@@ -205,14 +234,14 @@ ${readout("Projected Margin, 2028", r.projmarg, M.swingText(r.basemarg, r.projma
       return `<li><button type="button" data-county="${M.esc(r.name)}">${M.esc(r.name)}</button><span class="bar"><i style="${bar}"></i></span><span class="m" style="color:${col}">${M.fmtMargin(r.m)}</span></li>`;
     }).join("");
     return `<div class="state">
-<h2 class="cond">Pennsylvania, 2028 Projection</h2>
-<p class="lead">${data.counties.length} counties classified on projected margin. Click a county on the map, pick one from the list, or use the search box to open its dashboard.</p>
+<h2 class="cond">Pennsylvania, ${year} ${year === proj ? "Projection" : "Result"}</h2>
+<p class="lead">${data.counties.length} counties classified on ${year === proj ? "projected margin" : `the ${year} result`}. Click a county on the map, pick one from the list, or use the search box to open its dashboard.</p>
 <div class="kpis">
 <div class="kpi" style="--k:${C.dem}"><strong class="cond">${n.Blue}</strong><span>Blue counties</span></div>
 <div class="kpi" style="--k:${C.pur}"><strong class="cond">${n.Purple}</strong><span>Purple counties, inside ${M.PURPLE_BAND} points</span></div>
 <div class="kpi" style="--k:${C.rep}"><strong class="cond">${n.Red}</strong><span>Red counties</span></div>
 </div>
-<div class="panel"><h3>Closest Counties</h3><p>Smallest projected margins, either direction</p><ul class="closest">${li}</ul></div>
+<div class="panel"><h3>Closest Counties</h3><p>Smallest ${year === proj ? "projected" : String(year)} margins, either direction</p><ul class="closest">${li}</ul></div>
 </div>`;
   }
 
