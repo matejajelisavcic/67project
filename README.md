@@ -35,9 +35,15 @@ Every later data update is: run the build tool, commit, push.
   "closest counties" list) to open its dashboard. Esc returns to the
   statewide view.
 - The dashboard follows `MCAP__Dashboard_Variables.docx`. Red and blue
-  counties show the top row and education; purple counties (projected margin
-  inside 5 points) add enthusiasm, registration, vulnerability and historic
-  margins.
+  counties show the top row, History and education; purple counties (projected
+  margin inside 5 points) add enthusiasm, registration, vulnerability and
+  historic margins.
+- Every county carries a **History** panel between the score row and education:
+  its archetype title and background paragraph, from MCAP's "Pennsylvania County
+  Electoral Profiles". This copy lives in `data/county_profiles.js`, edited by
+  hand — `tools/build_data.py` never touches it, so a data rebuild cannot wipe
+  it. To reword a county, edit its `title` or `body` there; a county missing
+  from that file simply renders no History panel.
 - The URL tracks the state (`#view=swing&year=2016&county=Erie`), so a link
   opens the page on a specific county, view and year.
 - *Download map* saves the current map as PNG. *Print dashboard* prints the
@@ -70,6 +76,13 @@ python tools/build_data.py --input path/to/folder      # or path/to/workbook.xls
 The tool checks every county is present, values are inside their scales and
 years are complete, then writes `data/mcap_data.js`. Commit that file. If the
 source uses positive = Republican, add `--flip-sign`.
+
+**Run it with `--input` pointing at your own tables.** With no arguments it
+builds from `tools/demo_input/`, i.e. fabricated sample numbers. It now refuses
+to overwrite a real `data/mcap_data.js` (one whose meta says `"demo": false`)
+with a demo build unless you pass `--force`, because doing so is unrecoverable
+unless the real file happens to be committed. Keep `data/mcap_data.js`
+committed; it is the only copy of the built dataset in this repo.
 
 Column names are matched loosely (case, spaces and underscores ignored). Any
 of the aliases in `tools/build_data.py` work; the canonical names are:
@@ -121,6 +134,7 @@ js/panels.js        dashboard panels (SVG) and statewide summary
 js/map.js           choropleth, legend, PNG export
 js/app.js           state, tabs, search, URL hash
 data/mcap_data.js   generated: geometry + all three tables
+data/county_profiles.js  hand-edited: per-county History title + paragraph
 tools/build_data.py data build and validation
 tools/pa_counties.geojson   US Census county boundaries with FIPS / PennDOT codes
 tools/demo_input/   sample tables

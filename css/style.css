@@ -212,6 +212,10 @@ svg.chart { width: 100%; height: auto; display: block; }
 .vul .sub { color: var(--muted); font-size: 12px; line-height: 1.25; }
 .vul .tier { color: #fff; padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 13px; max-width: 220px; text-align: center; line-height: 1.3; }
 
+.profile { padding-bottom: 14px; }
+.profile .archetype { color: var(--ink); font-size: 14px; font-weight: 600; margin: 2px 0 6px; }
+.profile .prose { color: var(--ink); font-size: 13.5px; line-height: 1.55; margin: 0; max-width: 85ch; }
+
 .note { color: var(--muted); font-size: 12px; }
 
 /* ---------- empty / statewide state ---------- */

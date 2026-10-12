@@ -161,6 +161,14 @@ ${ticks}${zero}
 <div class="tier" style="background:${col}">${M.esc(r.anxiety_tier)}</div></div>`;
   }
 
+  // ---------------------------------------------------------- history
+  function history(name) {
+    const p = (window.MCAP_PROFILES || {})[name];
+    if (!p) return "";
+    return `<div class="panel profile"><h3>History</h3><p class="archetype">${M.esc(p.title)}</p>
+<p class="prose">${M.esc(p.body)}</p></div>`;
+  }
+
   // ---------------------------------------------------------- header + composition
   function header(c, kind, yearChip) {
     return `<div class="dhead-block">
@@ -207,6 +215,7 @@ ${second}
     if (!isProj)
       html += `<div class="yearnote">Showing the <b>${year}</b> result. Density, elasticity, national mood, vulnerability, enthusiasm and registration are ${proj} model values and do not change with the timeline.</div>`;
     html += topRow(data, c.name, year);
+    html += history(c.name);
     if (kind === "Purple") {
       html += `<div class="row two">${education(edu, c.name, data.meta.edu_last_actual, 420, year)}${historic(his, year)}</div>`;
       html += `<div class="row two">${enthusiasm(r)}${registration(r)}</div>`;
