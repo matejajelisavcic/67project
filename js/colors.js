@@ -7,7 +7,7 @@
     ink: "#15181D", muted: "#6B7280", rule: "#D9DEE5", track: "#E8ECF1",
     tier: { Low: "#2E7D74", Moderate: "#C9A227", Elevated: "#C4761E", High: "#B0202F" },
     // Dashboard thermometers and the big margin readouts.
-    density: "#88D5F4", elasticGauge: "#ED9433", mood: "#A5C864", readDem: "#4B85BA",
+    density: "#88D5F4", elasticGauge: "#ED9433", mood: "#A5C864", readDem: "#4B85BA", readRep: "#E54F25",
   };
 
   const MARGIN_STOPS = [
@@ -94,7 +94,7 @@
       return `+${Math.abs(v).toFixed(d)} ${v > 0 ? "D" : "R"}`;
     },
     marginColor(v) { return Math.abs(v) < PURPLE_BAND ? C.pur : v > 0 ? C.dem : C.rep; },
-    readoutColor(v) { return Math.abs(v) < PURPLE_BAND ? C.pur : v > 0 ? C.readDem : C.rep; },
+    readoutColor(v) { return Math.abs(v) < PURPLE_BAND ? C.pur : v > 0 ? C.readDem : C.readRep; },
     // Vulnerability composite (CEVS) is a z-score: negative = insulated,
     // positive = vulnerable. Color is continuous, independent of the tier label text.
     vulnColor: ramp([[0, "#2E7D74"], [0.5, "#C9A227"], [1, "#B0202F"]]),
