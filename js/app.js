@@ -19,11 +19,7 @@
   }
 
   // ---------------------------------------------------------- map
-  const { paths, zoom, refreshSelection } = M.map.build(svg, data, name => state.county === name ? clear() : select(name));
-
-  $("zoomIn").addEventListener("click", () => zoom.in());
-  $("zoomOut").addEventListener("click", () => zoom.out());
-  $("zoomReset").addEventListener("click", () => zoom.reset());
+  const { paths, refreshSelection } = M.map.build(svg, data, name => state.county === name ? clear() : select(name));
 
   function paint() {
     const spec = specs[state.metric];
@@ -41,8 +37,11 @@
     tl.querySelectorAll(".tl-pt").forEach(b => b.setAttribute("aria-pressed", +b.dataset.year === state.year));
   }
 
-  // tooltip
-  svg.addEventListener("mousemove", e => {
+  // tooltip: mouse only. A tap on a phone fires a synthetic mousemove but never
+  // a mouseleave, which left the box stuck over the page while scrolling.
+  const hideTip = () => { tip.style.display = "none"; };
+  svg.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") { hideTip(); return; }
     const p = e.target.closest(".cty");
     if (!p) { tip.style.display = "none"; return; }
     const n = p.dataset.n, spec = specs[state.metric], marg = M.marginAt(data, n, state.year);
@@ -53,7 +52,9 @@
     const x = Math.min(e.clientX + 14, window.innerWidth - 240), y = e.clientY + 14;
     tip.style.left = x + "px"; tip.style.top = y + "px";
   });
-  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+  svg.addEventListener("pointerleave", hideTip);
+  svg.addEventListener("click", hideTip);
+  window.addEventListener("scroll", hideTip, { passive: true });
 
   // ---------------------------------------------------------- tabs
   M.map.TABS.forEach(([key, label]) => {

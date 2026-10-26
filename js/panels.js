@@ -29,7 +29,7 @@ ${ticks}${zero}
   // ---------------------------------------------------------- big numbers
   function readout(title, value, note) {
     return `<div class="read"><span>${M.esc(title)}</span>
-<strong class="cond" style="color:${M.marginColor(value)}">${M.fmtMargin(value)}</strong>${note ? `<em>${M.esc(note)}</em>` : ""}</div>`;
+<strong class="cond" style="color:${M.readoutColor(value)}">${M.fmtMargin(value)}</strong>${note ? `<em>${M.esc(note)}</em>` : ""}</div>`;
   }
 
   // ---------------------------------------------------------- education
@@ -184,9 +184,9 @@ ${yearChip ? `<div class="yearchip">${M.esc(yearChip)}</div>` : ""}
   function topRow(data, name, year) {
     const r = data.metrics[name], proj = data.meta.proj_year;
     const YS = M.yearsOf(data), prev = YS[YS.indexOf(year) - 1];
-    const therms = `${thermometer(r.logpwd, 0, 10, "Population Density Score", C.teal)}
-${thermometer(r.elasticity, 0, 2, "Elasticity Score", C.elastic, 2)}
-${thermometer(r.macrotide, -5, 5, "National Mood Score", r.macrotide >= 0 ? C.dem : C.rep)}`;
+    const therms = `${thermometer(r.logpwd, 0, 10, "Population Density Score", C.density)}
+${thermometer(r.elasticity, 0, 2, "Elasticity Score", C.elasticGauge, 2)}
+${thermometer(r.macrotide, -5, 5, "National Mood Score", C.mood)}`;
     if (year === proj)
       return `<div class="row metrics">${therms}
 ${readout(`Base Margin, ${data.meta.base_year}`, r.basemarg, "")}

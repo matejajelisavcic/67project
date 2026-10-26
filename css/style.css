@@ -83,8 +83,7 @@ main {
 .btn:hover { border-color: var(--muted); }
 
 /* ---------- map ---------- */
-svg.map { width: 100%; height: auto; display: block; overflow: hidden; cursor: grab; touch-action: none; border-radius: 6px; }
-svg.map:active { cursor: grabbing; }
+svg.map { width: 100%; height: auto; display: block; overflow: hidden; border-radius: 6px; }
 .mapstage { position: relative; }
 
 /* ---------- timeline ---------- */
@@ -122,13 +121,6 @@ svg.map:active { cursor: grabbing; }
   align-self: center; background: var(--track); color: var(--muted);
   border-radius: 20px; padding: 3px 11px; font-size: 12px; font-weight: 600; white-space: nowrap;
 }
-.zoomctl { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-.zoomctl button {
-  width: 30px; height: 30px; border: 1px solid var(--rule); background: #fff; border-radius: 6px;
-  font-size: 16px; line-height: 1; cursor: pointer; color: var(--ink); box-shadow: 0 1px 2px rgba(11,14,19,.08);
-}
-.zoomctl button:hover { border-color: var(--muted); }
-.zoomctl .resetbtn { font-size: 10px; font-weight: 600; height: 24px; }
 .cty { stroke: #fff; stroke-width: .9; cursor: pointer; transition: fill .4s ease, opacity .18s, filter .18s; }
 .cty.faded { opacity: .5; filter: blur(1.1px) saturate(.85); }
 .cty.hot { opacity: 1; filter: none; stroke: var(--ink); stroke-width: 2.2; }
@@ -270,8 +262,6 @@ svg.chart { width: 100%; height: auto; display: block; }
 }
 /* Touch devices: finger-sized controls. */
 @media (pointer: coarse) {
-  .zoomctl button { width: 38px; height: 38px; font-size: 18px; }
-  .zoomctl .resetbtn { height: 30px; font-size: 11px; }
   .tabs button { padding: 11px 13px; }
   .closest li { padding: 10px 0; }
 }
