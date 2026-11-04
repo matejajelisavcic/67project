@@ -7,7 +7,7 @@
     ink: "#15181D", muted: "#6B7280", rule: "#D9DEE5", track: "#E8ECF1",
     tier: { Low: "#2E7D74", Moderate: "#C9A227", Elevated: "#C4761E", High: "#B0202F" },
     // Dashboard thermometers and the big margin readouts.
-    density: "#88D5F4", elasticGauge: "#ED9433", mood: "#A5C864", readDem: "#4B85BA", readRep: "#E54F25",
+    density: "#88D5F4", elasticGauge: "#ED9433", mood: "#A5C864", readDem: "#4B85BA", readRep: "#E42526",
   };
 
   const MARGIN_STOPS = [
