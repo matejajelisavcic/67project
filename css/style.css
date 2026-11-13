@@ -155,7 +155,9 @@ svg.map { width: 100%; height: auto; display: block; overflow: hidden; border-ra
 .tip b { display: block; font-size: 13.5px; }
 
 /* ---------- dashboard ---------- */
-.dash { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+/* .dash is a size container so its rows adapt to the width the dashboard
+   actually gets (embeds, two-column layout), not the browser window. */
+.dash { display: flex; flex-direction: column; gap: 22px; min-width: 0; container: dash / inline-size; }
 .dhead-block { display: flex; flex-direction: column; }
 .btn.back { border: 0; background: none; padding: 0 0 8px; color: var(--muted); font-size: 13px; align-self: flex-start; }
 .btn.back:hover { color: var(--ink); text-decoration: underline; }
@@ -181,9 +183,10 @@ svg.therm { width: 100%; max-width: 110px; height: auto; display: block; }
 .tv { font-family: var(--font-cond); font-size: 26px; font-weight: 600; text-anchor: middle; }
 .tv2 { font-size: 10.5px; font-weight: 600; fill: var(--ink); }
 
-.read { background: var(--panel); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; min-width: 0; }
+.read { background: var(--panel); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; min-width: 0; container-type: inline-size; }
 .read span { font-size: 13px; color: var(--muted); min-height: 2.5em; }
-.read strong { white-space: nowrap; font-size: 48px; line-height: 1; font-weight: 600; margin: 12px 0 6px; letter-spacing: -.01em; }
+/* Number scales with its own box so "+12.3 R" never spills out. */
+.read strong { white-space: nowrap; font-size: clamp(20px, 28cqi, 48px); line-height: 1; font-weight: 600; margin: 12px 0 6px; letter-spacing: -.01em; }
 .read em { font-style: normal; color: var(--muted); font-size: 12.5px; margin-top: auto; }
 
 .panel { background: var(--panel); border-radius: 8px; padding: 14px 16px 10px; position: relative; min-width: 0; }
@@ -226,6 +229,17 @@ svg.chart { width: 100%; height: auto; display: block; }
 .closest .bar i { position: absolute; top: 0; bottom: 0; }
 
 /* ---------- responsive ---------- */
+/* Metrics row: driven by the dashboard's width (container queries). */
+@container dash (max-width: 680px) {
+  .row.metrics { grid-template-columns: repeat(6, 1fr); }
+  .row.metrics .thermbox { grid-column: span 2; }
+  .row.metrics .read { grid-column: span 3; }
+  .row.two { grid-template-columns: 1fr; }
+}
+@container dash (max-width: 420px) {
+  .row.metrics .read { grid-column: span 6; }
+  .read span { min-height: 0; }
+}
 @media (max-width: 1100px) {
   main { grid-template-columns: 1fr; }
   .mapwrap { position: static; }
@@ -244,7 +258,6 @@ svg.chart { width: 100%; height: auto; display: block; }
   .mapwrap { padding: 14px 14px 12px; }
   .dhead { flex-wrap: wrap; }
   .dhead h2 { font-size: 30px; }
-  .read strong { font-size: 40px; }
   .vul { flex-wrap: wrap; }
   .scale .end { max-width: 34%; }
 }
