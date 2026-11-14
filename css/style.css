@@ -186,7 +186,7 @@ svg.therm { width: 100%; max-width: 110px; height: auto; display: block; }
 .read { background: var(--panel); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; min-width: 0; container-type: inline-size; }
 .read span { font-size: 13px; color: var(--muted); min-height: 2.5em; }
 /* Number scales with its own box so "+12.3 R" never spills out. */
-.read strong { white-space: nowrap; font-size: clamp(20px, 28cqi, 48px); line-height: 1; font-weight: 600; margin: 12px 0 6px; letter-spacing: -.01em; }
+.read strong { white-space: nowrap; font-size: clamp(20px, 22cqi, 48px); line-height: 1; font-weight: 600; margin: 12px 0 6px; letter-spacing: -.01em; }
 .read em { font-style: normal; color: var(--muted); font-size: 12.5px; margin-top: auto; }
 
 .panel { background: var(--panel); border-radius: 8px; padding: 14px 16px 10px; position: relative; min-width: 0; }
@@ -230,10 +230,12 @@ svg.chart { width: 100%; height: auto; display: block; }
 
 /* ---------- responsive ---------- */
 /* Metrics row: driven by the dashboard's width (container queries). */
-@container dash (max-width: 680px) {
+@container dash (max-width: 820px) {
   .row.metrics { grid-template-columns: repeat(6, 1fr); }
   .row.metrics .thermbox { grid-column: span 2; }
   .row.metrics .read { grid-column: span 3; }
+}
+@container dash (max-width: 680px) {
   .row.two { grid-template-columns: 1fr; }
 }
 @container dash (max-width: 420px) {
